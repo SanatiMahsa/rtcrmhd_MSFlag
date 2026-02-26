@@ -1,0 +1,212 @@
+&RUN_PARAMS
+cosmo=.true.       !# Indicates RAMSES whether the simulation is cosmological (i.e. with expansion)
+pic=.true.         !# Activates the particle-in-cell calculation
+poisson=.true.     !# Activates the Poisson gravity solver
+hydro=.true.       !# Activates the hydrodynamical solver
+verbose=.false.    !# Activates the verbose output from RAMSES (slows down the code!)
+ordering='hilbert' !# Hilbert curve ordering of grid cells
+nrestart=999       !# Output ID to restart from
+nremap=10          !# Grid remapping frequency
+nsubcycle=1,1,1,2  !# Number of subcycles per level. First 3 levels are synchronised, below, 2 cycles
+rt=.false.         !# No radiative transfer
+sink=.true.        !# Activate sink usage
+announce_dt_cond=.false. !# Activates logging of each dt limit condition
+/
+
+&OUTPUT_PARAMS
+! foutput=100      !# Output frequency in coarse steps (every 100 steps) - better to disable and use maxruntime
+maxruntime=36      !# Maximum time of execution in hours. 
+minutes_save=20.0  !# Number of minutes when the backup output is dumped before maxruntime is hit
+noutput=128        !# Number of outputs requested (and scale factors requested in aout)
+aout=0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.075,0.08,0.085,0.09,0.095,0.1,0.105,0.11,0.115,0.12,0.125,0.13,0.135,0.14,0.145,0.15,0.155,0.16,0.165,0.17,0.175,0.18,0.185,0.19,0.195,0.20,0.2025,0.205,0.2075,0.21,0.2125,0.215,0.2175,0.22,0.2225,0.225,0.2275,0.23,0.2325,0.235,0.2375,0.24,0.2425,0.245,0.2475,0.25,0.26,0.27,0.28,0.29,0.30,0.31,0.32,0.33,0.34,0.35,0.36,0.37,0.38,0.39,0.4,0.41,0.42,0.43,0.44,0.45,0.46,0.47,0.48,0.49,0.5,0.51,0.52,0.53,0.54,0.55,0.56,0.57,0.58,0.59,0.6,0.61,0.62,0.63,0.64,0.65,0.66,0.67,0.68,0.69,0.7,0.71,0.72,0.73,0.74,0.75,0.76,0.77,0.78,0.79,0.8,0.81,0.82,0.83,0.84,0.85,0.86,0.87,0.88,0.89,0.9,0.91,0.92,0.93,0.94,0.95,0.96,0.97,0.98,0.99,1.0
+precise_output=.true. !# dt is limitted to produce exact output
+/
+
+&INIT_PARAMS
+aexp_ini=2d-3       !# Initial scale factor
+filetype='grafic'   !# Type of initialisation files (and their path in the machine storage below)
+initfile(1)='/rds/project/dirac_vol2/rds-dirac-dp012/sm2464/HabRuns/NUT_IC/IC_128'
+initfile(2)='/rds/project/dirac_vol2/rds-dirac-dp012/sm2464/HabRuns/NUT_IC/IC_256'
+initfile(3)='/rds/project/dirac_vol2/rds-dirac-dp012/sm2464/HabRuns/NUT_IC/IC_512'
+initfile(4)='/rds/project/dirac_vol2/rds-dirac-dp012/sm2464/HabRuns/NUT_IC/IC_1024'
+! initfile(1)='/cosma8/data/dp193/dc-mart6/NUT/NUT_IC/IC_128'
+! initfile(2)='/cosma8/data/dp193/dc-mart6/NUT/NUT_IC/IC_256'
+! initfile(3)='/cosma8/data/dp193/dc-mart6/NUT/NUT_IC/IC_512'
+! initfile(4)='/cosma8/data/dp193/dc-mart6/NUT/NUT_IC/IC_1024'
+/
+
+&AMR_PARAMS
+levelmin=7           !# Minimum level of resolution everywhere (2^levelmin)
+levelmax=18          !# Minimum level of resolution allowed (2^levelmax)
+ngridmax=1000000     !# Maximum number of grids allowed in a computing core
+npartmax=5000000     !# Maximum number of particles allowed in a computing core
+/
+
+&REFINE_PARAMS
+x_refine=30*0.68,    !# Zoom region centre (in box coordinates - remember box length = 1!)
+y_refine=30*0.33,    !# Zoom region centre (in box coordinates - remember box length = 1!)
+z_refine=30*0.29,    !# Zoom region centre (in box coordinates - remember box length = 1!)
+m_refine=0.0,0.0,0.0,27*8.0, !# Particle refinement criterion. Grid is refined when 8 DM particle in cell
+r_refine=0.34,0.33,27*0.32,  !# Radius of the zoom region  (in box coordinates - remember box length = 1!)
+a_refine=30*1.0,     !# Refinement parameters
+b_refine=30*1.0,     !# Refinement parameters
+exp_refine=30*2.0,   !# Refinement parameters
+interpol_var=1       !# Type of interpolation for cells with neighbours and refinement
+interpol_type=0      !# Type of interpolation for cells with neighbours and refinement
+!jeans_refine=-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,7*4., 
+jeans_refine=-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,7*-1., 
+constant_physical_resolution=.true. !# Release level of refinement with expansion to keep const. resolution
+sink_refine=.true.
+/
+
+&POISSON_PARAMS
+cg_levelmin=12       !# Gravity solver stuff
+cic_levelmax=14      !# Gravity solver stuff
+epsilon=1d-4         !# Gravity solver stuff
+/
+
+&HYDRO_PARAMS
+gamma=1.6666667      !# Gas adiabatic index
+courant_factor=0.8   !# Courant stability factor
+slope_type=1         !# Slope assumed for the profile of cells
+pressure_fix=.true.  !# Numerical tool to solve for unrealistically low pressures
+scheme='muscl'       !# Integration scheme
+riemann='hlld'       !# Integration solver for hydro quantities
+riemann2d='hlld'     !# Integration solver for magnetic field
+beta_fix=0.5
+/
+
+&PHYSICS_PARAMS
+z_reion=10.            !# Redshift at which UV background is activated
+haardt_madau=.true.    !# UV background to model reionisation?
+self_shielding=.true.  !# Allow dense gas to self-shield against reionisation
+cooling=.true.         !# Account for radiative cooling of the gas
+neq_chem=.false.       !# Non-equilibrium chemistry (we keep this off)
+metal=.true.           !# Model the evolution of metals in the simulation
+del_star=200.
+jeans_ncells=-1
+z_ave=1d-3             !# Initial metallicity of the Universe everywhere
+! Star formation configuration
+star_maker='FK2'       !# Star formation model used
+n_star=10.             !# Star-formation and feedback stuff
+n_gmc=10.              !# Star-formation and feedback stuff
+t_star=0.632456        !# Star-formation and feedback stuff
+T2_star=15.            !# Star-formation and feedback stuff
+g_star=1.0             !# Star-formation and feedback stuff
+maxlev_sf=.true.       !# Star-formation and feedback stuff
+local_dmax=.false.     !# Star-formation and feedback stuff
+! SN feedback configuration
+mechanical_feedback=.true. 
+eta_sn=0.2             !# IMF assumed for star formation (returned gas by SN)
+mechanical_geen=.false.
+sn2_real_delay=.true.
+use_initial_mass=.true.
+t_sne=50               !# Time delay over which SN take place
+nsn2mass=90            !# Number of SN explosions per stellar mass
+fstar_min=-1
+yield=0.075            !# Returned metallicity by SN
+!rbubble=32.0           !# Star-formation and feedback stuff
+!f_ek=1.0               !# Star-formation and feedback stuff
+!f_w=58.0               !# Star-formation and feedback stuff
+log_mfb=.false.         !# SN explosions report their properties
+!t_delay=3d0            !# Star-formation and feedback stuff
+!A_SN=5d5               !# Star-formation and feedback stuff
+!expN_SN=0d0            !# Star-formation and feedback stuff
+M_SNII=10.0            !# Mass assumed for stars exploding as SN
+B_ave=3.e-20           !# Magnetic field of the Universe everywhere
+injBfac=0.0d0          !# Magnetic field injected with SNe (keep to zero!)
+!# We will use the following values:
+!# B_ave=3.e-10 for an extremely strong field
+!# B_ave=3.e-11 for a strong field
+!# B_ave=3.e-12 for a reasonable field (realistic strength in galaxies)
+!# B_ave=3.e-20 for no magnetic field (Biermann: approx B = 1e-18 at z = 50)
+!################## SMBH physics ###################
+ir_feedback=.false. !# Activate ir feedback from accreting sinks
+ir_eff=0.75d0       !# efficiency of the IR
+ind_rsink=4.0d0     !# Number of cells for radius active AGN sphere
+smbh=.true.         !# SMBH behaviour (i.e. Bondi accretion)
+agn=.true.         !# AGN feedback
+/
+
+
+! ####################################
+! ####################################
+&SINK_PARAMS
+! General parameters #################
+nsinkmax=1                    !# Maximum number of sink particles
+create_sinks=.false.          !# Formation of new sinks activated
+rho_sink=1.0d-20              !# Sink particle (minimum) density threshold in g/cc
+! SMBH seeding with center of mass ###
+seed_smbh_com=.true.       !# Activates the center of mass SMBH seeding
+nsink_com=1                   !# Number of maximum sinks for com seeding
+aexp_sink_com=0.0909090909    !# Scale factor over which com seeding is active
+smbh_mass_track_mass=1.0d5    !# Initial sink mass. For < 0 => SMBH heat to 10^7 K based recipe (units: Msun)
+! ####################################
+! Accretion parameters ###############
+detailedSMBH=.true.           !# Detailed prints for SMBH evolution
+nol_accretion=.false.         !# Maintain angular mom in gas at accretion
+eddington_limit=.true.        !# Switch for Eddington limit for the SMBH case
+acc_sink_boost=-1.0d0         !# Boost coefficient for accretion (negative for Horizon model)
+accretion_scheme='bondi'      !# Sink accretion scheme
+! ####################################
+! AGN feedback parameters ############
+verbose_AGN=.true.            !# Controls print verbosity for the SMBH case
+T2_AGN=5.0d9                 !# AGN blast temperature (units: K)
+v_AGN=1.0d4                   !# AGN blast velocity (units: km/s)
+feedback_scheme='energy'      !# AGN feedback scheme: 'energy' or 'momentum'
+cone_opening=180.             !# Outflow cone opening angle (units: degree)
+! ####################################
+! Other parameters ###################
+sink_drag=.false.              !# Gas dragging sink
+drag_part=.false.              !# Hugo's dynamical friction
+DF_ncells=5                   !# Number of cells used for dynamical friction	
+sink_soft=2.0d0               !# Sink grav softening length in dx at lmax (for direct force sinks)
+c_acc=-1.0d0                  !# "courant factor" for sink accretion in timestep control
+mass_sink_direct_force=1.0d4  !# mass above which sinks are treated as direct force
+! ir_cloud=4                    !# Radius of cloud region in unit of grid (accretion radius!)
+! ir_cloud_massive=3            !# Radius of massive cloud region in unit of grid spacing for PM sinks
+ir_cloud=2                    !# Radius of cloud region in unit of grid (accretion radius!)
+ir_cloud_massive=2            !# Radius of massive cloud region in unit of grid spacing for PM sinks
+!# (only when 'timescale' is used), also contraction timescale in creation
+! Not used:
+clump_core=.false.            !# Trims the clump (for star formation)
+merging_timescale=-1.0d0      !# Time during which sinks are considered for merging
+mass_merger_vel_check_AGN=-1.0d0 !# Threshold for velocity check in merging (units: Msun)
+mass_halo_AGN=1.0d10          !# Minimum mass of the halo for sink creation (units: Msun)
+mass_clump_AGN=1.0d10         !# Minimum mass of the clump for sink creation
+! n_sink=                     !# Sink particle density threshold in H/cc
+! d_sink=                     !# Sink particle density threshold in user units
+fix_sink2com=.true.        !# pins the BH to the galaxy com
+/
+! ####################################
+! ####################################
+
+
+&MOVIE_PARAMS
+!# Track COM configuration
+track_center_mass=.true.
+track_center_stars=.true.
+!# From NUT (qEul20; z = 11.3): 0.6871572136878967, 0.34940430521965027, 0.3574831783771515
+xtrack_center_mass_def=0.687157, 0.349404, 0.357483
+do_center_track_movie=.false.,.false.,.true.
+aexp_track_movie=1.0,1.0,0.08475
+aexp_track=0.083333333  !# Tracking started at z = 11.0
+!# Movies configuration
+imovout=5000
+aendmov=1.
+imov=1
+movie=.true.
+nw_frame=1920
+nh_frame=1080
+levelmax_frame=20
+xcentre_frame=.70, 0., 0., 0., .70, 0., 0., 0., .70, 0., 0., 0.
+ycentre_frame=.33, 0., 0., 0., .33, 0., 0., 0., .33, 0., 0., 0.
+zcentre_frame=.34, 0., 0., 0., .34, 0., 0., 0., .34, 0., 0., 0.
+deltax_frame=.04, 0, .025, 0, .0165, 0
+deltay_frame=.04, 0, .025, 0, .0165, 0
+deltaz_frame=.04, 0, .025, 0, .0165, 0
+proj_axis='zzz'
+!#########################################################################
+movie_vars_txt="dens","temp","stars","pmag"
+!#########################################################################
+/
