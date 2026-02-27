@@ -3124,6 +3124,9 @@ subroutine f_gas_sink(ilevel)
   use pm_commons
   use hydro_commons
   use poisson_commons
+#ifdef TRACKER
+  use tracker_commons
+#endif
   implicit none
 #ifndef WITHOUTMPI
   include 'mpif.h'
@@ -3183,6 +3186,19 @@ subroutine f_gas_sink(ilevel)
 #endif
 #if NDIM>2
   if(ndim>2)period(3)=(nz==1)
+#endif
+
+#ifdef MS
+  do isink=1,nsink
+     if(any(abs(xsink(isink,1:ndim))>1.0d0) .or. any(isnan(xsink(isink,1:ndim))))then
+        write(*,'("xsink_fgs:",3(1X,1PE14.7))') xsink(isink,1:ndim)
+        xsink(isink,1:ndim)=tracker(1)%xpos
+     endif
+     if(any(abs(vsink(isink,1:ndim))>1.0d0) .or. any(isnan(vsink(isink,1:ndim))))then
+        write(*,'("vsink_fgs:",3(1X,1PE14.7))') vsink(isink,1:ndim)
+        vsink(isink,1:ndim)=tracker(1)%vel
+     endif
+  enddo
 #endif
   
   ! Loop over sinks 
