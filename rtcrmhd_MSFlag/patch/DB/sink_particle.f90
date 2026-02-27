@@ -2557,14 +2557,6 @@ subroutine update_sink(ilevel)
         
         ! this is the kick-kick (half old half new timestep)
         vsink(isink,1:ndim)=0.5D0*(dtnew(ilevel)+dteff)*fsink(isink,1:ndim)+vsink(isink,1:ndim)
-!#ifndef MS
-!        do idim=1,ndim
-!           if((abs(vsink(isink,idim)))>1.0d0)then 
-!            write(*,'("vsink:",3(1X,1PE14.7))'), vsink(isink,idim)
-!            vsink(isink,idim)=sign(1.0d-2, vsink(isink,idim))
-!           endif
-!        end do
-!#endif
         
         ! save the velocity
         vsnew(isink,1:ndim,ilevel)=vsink(isink,1:ndim)
@@ -2575,6 +2567,15 @@ subroutine update_sink(ilevel)
         ! save the velocity
         vsnew(isink,1:ndim,ilevel)=vsink(isink,1:ndim)
         
+#ifdef MS
+        ! Clamp vsink after kicks, before drift
+        if(any(abs(vsink(isink,1:ndim))>1.0d0) .or. any(isnan(vsink(isink,1:ndim))))then
+           write(*,'("vsink_u:",3(1X,1PE14.7)," fsink:",3(1X,1PE14.7))') &
+                vsink(isink,1:ndim), fsink(isink,1:ndim)
+           vsink(isink,1:ndim)=tracker(1)%vel
+           vsnew(isink,1:ndim,ilevel)=vsink(isink,1:ndim)
+        endif
+#endif
         ! and this is the drift (only for the global sink variable)
         xsink(isink,1:ndim)=xsink(isink,1:ndim)+vsink(isink,1:ndim)*dtnew(ilevel)
 #ifdef MS
