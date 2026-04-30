@@ -99,6 +99,9 @@ subroutine output_frame()
   integer::ipart_start
   integer::idm_map,istar_map,ilum_map,iyoungst_map,ioldst_map
   integer::iinflow_map,ioutflow_map,inoflow_map
+#if NCR>0
+  integer::icrs_map
+#endif
   
 #ifdef TRACKER
   integer::itrack
@@ -127,6 +130,9 @@ subroutine output_frame()
   ilum_map=ipart_start+2
   iyoungst_map=ipart_start+3
   ioldst_map=ipart_start+4
+#if NCR>0
+  icrs_map=9
+#endif
 
   ! Only one projection available in 2D
   if((ndim.eq.2).and.(trim(proj_axis).ne.'z')) proj_axis = 'z'
@@ -201,7 +207,7 @@ subroutine output_frame()
   moviefiles(NVAR+3) = trim(moviedir)//'bzr_'//trim(istep_str)//'.map'
   moviefiles(NVAR+4) = trim(moviedir)//'pmag_'//trim(istep_str)//'.map'
 #if NCR>0
-  moviefiles(9) = trim(moviedir)//'pcrs_'//trim(istep_str)//'.map'
+  moviefiles(icrs_map) = trim(moviedir)//'pcrs_'//trim(istep_str)//'.map'
 #endif
 #endif
 
@@ -830,7 +836,7 @@ endif
                                          end if
                                       end if
                                    ! Other scalars map
-                                   else if(kk.gt.1)then
+                                   else if ((kk.gt.1) .and. (kk.le.NVAR)) then
                                       uvar = uold(ind_cell(i),kk)/max(uold(ind_cell(i),1),smallr)
                                    endif
 #ifdef SOLVERmhd
@@ -842,8 +848,8 @@ endif
 #endif
 #if NCR>0
                                    ! Cosmic rays energy map case
-                                   if(kk.eq.9)then
-                                      uvar = uold(ind_cell(i),9)
+                                   if(kk.eq.icrs_map)then
+                                      uvar = uold(ind_cell(i),icrs_map)
                                    endif
 #endif                                   
                                    ! Frame update
@@ -952,9 +958,11 @@ endif
      imap = 1
      do kk=0,ipart_start+4
         if(movie_vars(kk).eq.1)then
-           if(star) then
+           if(allocated(tp)) then
+              ! Safety check: ensure indices are within bounds
+              if(ii.lt.1.or.ii.gt.nw_frame.or.jj.lt.1.or.jj.gt.nh_frame.or.imap.lt.1.or.imap.gt.nframes) cycle
               ! DM particles
-              if((tp(j).eq.0d0).and.(kk.eq.idm_map)) then
+              if(j.le.size(tp).and.(tp(j).eq.0d0).and.(kk.eq.idm_map)) then
                  if(mass_cut_refine>0.0.and.zoom_only_frame(proj_ind)) then
                     if(mp(j)<mass_cut_refine) data_frame(ii,jj,imap)=data_frame(ii,jj,imap)+mp(j)
                  else
@@ -1003,6 +1011,8 @@ endif
 
            else
               ! DM particles only
+              ! Safety check: ensure indices are within bounds
+              if(ii.lt.1.or.ii.gt.nw_frame.or.jj.lt.1.or.jj.gt.nh_frame.or.imap.lt.1.or.imap.gt.nframes) cycle
               if(kk.eq.idm_map) then
                  if(mass_cut_refine>0d0.and.zoom_only_frame(proj_ind)) then
                     if(mp(j)<mass_cut_refine) data_frame(ii,jj,imap)=data_frame(ii,jj,imap)+mp(j)
@@ -1269,6 +1279,9 @@ subroutine set_movie_vars()
   integer::ipart_start
   integer::idm_map,istar_map,ilum_map,iyoungst_map,ioldst_map
   integer::iinflow_map,ioutflow_map,inoflow_map
+#if NCR>0
+  integer::icrs_map
+#endif
   !--------------------------------------------------   
   ! Determine movie dummy numbers
   !--------------------------------------------------   
@@ -1289,8 +1302,9 @@ subroutine set_movie_vars()
   ilum_map=ipart_start+2
   iyoungst_map=ipart_start+3
   ioldst_map=ipart_start+4
-
-  
+#if NCR>0
+  icrs_map=9
+#endif
   if(ANY(movie_vars_txt=='temp  ')) movie_vars(0)=1
   if(ANY(movie_vars_txt=='dens  ')) movie_vars(1)=1
   if(ANY(movie_vars_txt=='vx    ')) movie_vars(2)=1
@@ -1320,7 +1334,7 @@ subroutine set_movie_vars()
   if(ANY(movie_vars_txt=='bzr   ')) movie_vars(NVAR+3)=1
   if(ANY(movie_vars_txt=='pmag  ')) movie_vars(NVAR+4)=1
 #if NCR>0
-  if(ANY(movie_vars_txt=='pcrs  ')) movie_vars(9)=1  
+  if(ANY(movie_vars_txt=='pcrs  ')) movie_vars(icrs_map)=1  
 #endif
 #endif
 
