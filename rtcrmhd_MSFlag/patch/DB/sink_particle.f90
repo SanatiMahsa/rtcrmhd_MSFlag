@@ -250,17 +250,13 @@ subroutine create_cloud_from_sink
                     indp=ind_cloud(1)
                     idp(indp)=-isink
                     levelp(indp)=levelmin
-                    !if (rr>=rmass .and. msink(isink)<mass_sink_direct_force*1.9891d33/(scale_d*scale_l**3))then
-                    !   write(*,*)'massive cloud',msink(isink)
                     if (rr<=rmass .and. msink(isink)<mass_sink_direct_force*1.9891d33/(scale_d*scale_l**3))then
                        mp(indp)=msink(isink)/dble(ncloud_sink_massive)
                     else
                        mp(indp)=0.
                     end if
                     xp(indp,1:3)=xtest(1,1:3)
-                    !write(*,*)'xcloud',xp(indp,1:3)
                     vp(indp,1:3)=vsink(isink,1:3)
-                    !write(*,*)'vcloud',vp(indp,1:3)
                     tp(indp)=0.0d0 !tsink(isink)     ! Birth epoch
                  end if
               end do
@@ -271,7 +267,6 @@ subroutine create_cloud_from_sink
   
   do isink=1,nsink
      direct_force_sink(isink)=(msink(isink) .ge. mass_sink_direct_force*1.9891d33/(scale_d*scale_l**3))
-     !write(*,*)'massive cloud'
   end do
 
 #endif
@@ -501,10 +496,6 @@ subroutine collect_acczone_avg(ilevel)
      call MPI_ALLREDUCE(wmom,wmom_new,nsinkmax*ndim,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,info)
      call MPI_ALLREDUCE(wdiv,wdiv_new,nsinkmax,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,info)
      call MPI_ALLREDUCE(level_sink_new,level_sink,nsinkmax*(nlevelmax-levelmin+1),MPI_LOGICAL,MPI_LOR,MPI_COMM_WORLD,info)
-     !if(myid==1)then
-      !write(*,'("SMOM_MPI:",3(1X,1PE14.7))'), wmom_new
-      !write(*,'("SDEN_MPI:",4(1X,1PE14.7))'), wden_new, wvol_new, weth_new, wdiv_new
-     !endif
      if (detailedSMBH) then
 #ifdef SOLVERmhd     
         call MPI_ALLREDUCE(wemag,wemag_new,nsinkmax,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,info)
@@ -615,10 +606,6 @@ subroutine collect_acczone_avg_np(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
         emag(j)=0.
 #endif
         if (floor_acc) d=max(d-rho_min_acc_code,rho_min_acc_code)
-        !if (floor_acc)then
-        ! d=max(d-rho_min_acc_code,rho_min_acc_code)
-        ! write(*,*) 'floor acczone', d
-        !endif
      end if
   end do
     
@@ -652,7 +639,6 @@ subroutine collect_acczone_avg_np(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
      !compute divergence of (rho*v - rho*vsink) in one go
      do j=1,np
         isink=-idp(ind_part(j))
-      if (isink == 0)write(*,*) 'ERROR: isink==0 in collect_acczone_avg_np, ind_part=', ind_part(j)
         divpart(j)=divpart(j)+(fluid_var_right(j,divdim+1)-fluid_var_right(j,1)*vsink(isink,divdim)-&
              fluid_var_left(j,divdim+1)+fluid_var_left(j,1)*vsink(isink,divdim))*one_over_dx_min
      end do
@@ -660,7 +646,6 @@ subroutine collect_acczone_avg_np(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
 
   do j=1,np
      isink=-idp(ind_part(j))
-     if(isink==0)write(*,*) 'error in collect_acczone_avg_np2: ind_part=', ind_part(j)
      weight=0._dp
      do ind=1,twotondim
         weight=weight+weightp(ind_part(j),ind)
@@ -675,14 +660,6 @@ subroutine collect_acczone_avg_np(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
      wemag(isink)=wemag(isink)+weight*emag(j)
 #endif
      wmetal(isink)=wmetal(isink)+weight*metalc(j)
-!#ifdef MS
-!   write(*,*) "Weight:", weight
-!   write(*,*) "Density (wden):", wden(isink)
-!   write(*,*) "Momentum (wmom):", wmom(isink,1:3)
-!   write(*,*) "Thermal Energy (weth):", weth(isink)
-!   write(*,*) "Divergence (wdiv):", wdiv(isink)
-!
-!#endif
   end do
 
 end subroutine collect_acczone_avg_np
@@ -809,12 +786,6 @@ subroutine grow_sink(ilevel,on_creation)
       allocate(agn_inj_mag_out(1:nsinkmax))
       allocate(agn_inj_tot_out(1:nsinkmax))
      endif
-     !if (msink_new(isink) > 0d0) write(*,*) "msink_new",msink_new(isink)
-     ! !if(isink<1)isink=1
-     !if(any(isnan(vsink_new(isink,1:ndim))))then
-     !    write(*,*)'NaN in vsink_new before MPI, isink=',isink
-     !    write(*,*)'msink_new=',msink_new(isink)
-     !endif
      call MPI_ALLREDUCE(msink_new,msink_all,nsinkmax,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,info)
 #ifdef MS
      call MPI_ALLREDUCE(agn_inj_mag,agn_inj_mag_out,nsinkmax,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,info)
@@ -826,9 +797,6 @@ subroutine grow_sink(ilevel,on_creation)
      !write(*,'("AMPI:",3(1X,1PE14.7))'), xsink_all(1,1:ndim)
      call MPI_ALLREDUCE(vsink_new,vsink_all,nsinkmax*ndim,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,info)
      call MPI_ALLREDUCE(lsink_new,lsink_all,nsinkmax*3,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,info)
-     !if(any(abs(lsink_new(1,1:ndim)).gt.0))then
-     ! write(*,'("AMPI:",3(1X,1PE14.7))'), lsink_new(1,1:ndim)
-     !endif
      if (detailedSMBH) then
         call MPI_ALLREDUCE(lmom_gas_new,lmom_gas_all,nsinkmax*3,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,info)
      end if  
@@ -847,13 +815,6 @@ subroutine grow_sink(ilevel,on_creation)
   agn_inj_tot=0
   do isink=1,nsink
      ! Reset jump in sink coordinates
-!#ifdef MS
-!      if(myid==1)then
-!         write(*,*) "grow_sink1",delta_mass_all,vsink_all
-!         write(*,*) "grow_sink2",xsink_all,lmom_gas_all
-!         write(*,*) "grow_sink3",msink_all,lsink_all
-!      endif
-!#endif
 #ifdef MS
      if(mhd_AGN.and.myid==1)then
         !write(*,*)"SI",isink,agn_inj_mag_out(isink),agn_inj_tot_out(isink)
@@ -865,19 +826,15 @@ subroutine grow_sink(ilevel,on_creation)
      end do
      
      !save old velocity and location to compute deltas
-     !write(*,'("old_loc:",6(1X,1PE14.7))'), old_loc(1:ndim),xsink(1,1:ndim) 
      old_loc(1:ndim)=xsink(isink,1:ndim)
      old_vel(1:ndim)=vsink(isink,1:ndim)
      
      ! Change to conservative quantities
-     !write(*,'("BUpdate:",3(1X,1PE14.7))'), xsink(1,1:ndim)
      xsink(isink,1:ndim)=xsink(isink,1:ndim)*msink(isink)
-     !write(*,'("After scaling xsink:",4(1X,1PE14.7))'), xsink(isink,1:ndim), msink(isink)
-     !write(*,'("xsink:",4(1X,1PE14.7))'), xsink(isink,1:ndim), msink(isink) 
      vsink(isink,1:ndim)=vsink(isink,1:ndim)*msink(isink)
      
 
-! Accrete to sink variables
+     ! Accrete to sink variables
      msink(isink)=msink(isink)+msink_all(isink)
      xsink(isink,1:ndim)=xsink(isink,1:ndim)+xsink_all(isink,1:ndim)
 #ifdef MS
@@ -919,10 +876,6 @@ subroutine grow_sink(ilevel,on_creation)
 
      !correct for new center of mass location/velocity
      lsink(isink,1:3)=lsink(isink,1:3)-msink(isink)*cross((xsink(isink,1:ndim)-old_loc(1:ndim)),(vsink(isink,1:ndim)-old_vel(1:ndim)))
-     !write(*,'("lsink:",3(1X,1PE14.7))'), lsink(isink,1:ndim)
-     !write(*,'("msink:",(1X,1PE14.7))'), msink(isink)
-     !write(*,'("xsink:",3(1X,1PE14.7))'), xsink(isink,1:ndim)
-     !write(*,'("vsink:",3(1X,1PE14.7))'), vsink(isink,1:ndim)
 
      ! Store jump in sink coordinates
      do lev=levelmin,nlevelmax
@@ -1065,12 +1018,10 @@ subroutine accrete_sink(ind_grid,ind_part,ind_grid_part,ng,np,ilevel,on_creation
            
            ! Convert uold to primitive variables
            d=max(uold(indp(j,ind),1),smallr)
-           !write(*,*)"density",d
            vv(1)=uold(indp(j,ind),2)/d
            vv(2)=uold(indp(j,ind),3)/d
            vv(3)=uold(indp(j,ind),4)/d
            e=uold(indp(j,ind),5)
-           !write(*,'("wrong:",5(1X,1PE14.7))') d, vv(1), vv(2), vv(3), e
 
 #ifdef SOLVERmhd
            bx1=uold(indp(j,ind),6)
@@ -1104,39 +1055,15 @@ subroutine accrete_sink(ind_grid,ind_part,ind_grid_part,ng,np,ilevel,on_creation
               write(*,*)'ind_part(j)=',ind_part(j)
               call clean_stop
            endif
-           !if(isink==0)then
-           !   write(*,*)'ERROR: Invalid sink index in accrete_sink'
-           !   write(*,*)'isink=',isink,' from idp=',-isink
-           !   write(*,*)'j=',j,' ind_part(j)=',ind_part(j)
-           !   write(*,*)'idp(ind_part(j))=',idp(ind_part(j))
-           !   write(*,*)'tp(ind_part(j))=',tp(ind_part(j))
-           !   write(*,*)'mp(ind_part(j))=',mp(ind_part(j))
-           !   write(*,*)'xp=',xp(ind_part(j),1:3)
-           !endif
  
            ! Drag force based on virtual accretion
            Macc=0.d0; Mred=0.d0; delta_M(isink)=0.d0
-!#ifndef MS
            if (sink_drag)then
               Macc=max((dMBHoverdt(isink)-dMsink_overdt(isink))*dtnew(ilevel),tiny(0.0d0))
               Mred=msink(isink)*(rho_gas(isink)*volume_gas(isink))/(max(msink(isink),tiny(0.0d0))+(rho_gas(isink)*volume_gas(isink)))
               delta_M(isink)=Mred*Macc/(Mred+Macc+tiny(0.0d0))
            end if
-!#else
-!           !add condition that if not Eddington limited, istead of dMBHoverdt(isink)-dMsink_overdt(isink) use dMBHoverdt(isink)
-!
-!           if (sink_drag)then
-!              if(eddington_limit)then
-!               Macc=max((dMBHoverdt(isink)-dMsink_overdt(isink))*dtnew(ilevel),0.d0)
-!              else
-!               Macc=max(dMsink_overdt(isink)*dtnew(ilevel),0.d0)
-!              end if
-!              Mred=msink(isink)*(rho_gas(isink)*volume_gas(isink))/(max(msink(isink),tiny(0.0d0))+(rho_gas(isink)*volume_gas(isink)))
-!              delta_M(isink)=Mred*Macc/(Mred+Macc+tiny(0.0d0))
-!           end if
-!#endif
            delta_M(isink)=min(delta_M(isink),msink(isink)*dx_loc/(sum((xsink(isink,1:ndim)-xx(j,1:ndim,ind))**2)**0.5+tiny(0.d0)))
-           !write(*,*)"drag accretion",isink,delta_M(isink),Macc,Mred,dMBHoverdt(isink),dMsink_overdt(isink),msink(isink),rho_gas(isink),volume_gas(isink)
            
            ! Compute sink average density
            weight=weightp(ind_part(j),ind)
@@ -1161,13 +1088,7 @@ subroutine accrete_sink(ind_grid,ind_part,ind_grid_part,ng,np,ilevel,on_creation
            else
               if (flux_accretion .or. bondi_accretion)then
                  acc_mass=dMsink_overdt(isink)*dtnew(ilevel)*weight/volume*d/density
-                 !write(*,*)'wrong...',acc_mass
                  virt_acc_mass=delta_M(isink)*weight/volume*d/density
-!#ifdef MS
-!                 if(acc_mass<1.0d-40 .or. virt_acc_mass.ne.0.0d0)then
-!                  write(*,'("acc_mass:",2(1X,1PE14.7))'), acc_mass,virt_acc_mass
-!                 endif
-!#endif
                  !fbk_ener_AGN=min(delta_mass(isink)*T2_AGN/scale_T2*weight/volume*d/density,T2_max/scale_T2*weight*d)
                  !fbk_mom_AGN=min(delta_mass(isink)*v_AGN*(180./cone_opening)*1.e5/scale_v*weight/volume*d/density,v_max*1.e5/scale_v*weight*d)
               end if
@@ -1186,12 +1107,7 @@ subroutine accrete_sink(ind_grid,ind_part,ind_grid_part,ng,np,ilevel,on_creation
 
               ! No neg accretion
               acc_mass=max(acc_mass,0.0_dp)               
-!#ifdef MS
-!              ! Limit accretion so cell density stays above floor
-!              if(floor_acc)then
-!                 acc_mass=min(acc_mass, max(d - rho_min_acc_code, 0.0d0)*vol_loc)
-!              endif
-!#endif
+
               !Switch between quasar and radio mode
               if(agn.and.msink(isink).gt.0)then
                  acc_ratio=dMsink_overdt(isink)/(4.*3.1415926*6.67d-8*msink(isink)*1.66d-24/(0.1d0*6.652d-25*3d10)*scale_t)
@@ -1215,35 +1131,15 @@ subroutine accrete_sink(ind_grid,ind_part,ind_grid_part,ng,np,ilevel,on_creation
 
            ! reference frame relative to the sink
            r_rel(1:3)=xx(j,1:3,ind)-xsink(isink,1:3) 
-           !write(*,'("xsink:",3(1X,1PE14.7))'), xsink(isink,1:3) 
            do idim=1,ndim
               if (period(idim) .and. r_rel(idim)>boxlen*0.5)xx(j,idim,ind)=xx(j,idim,ind)-boxlen
               if (period(idim) .and. r_rel(idim)<boxlen*(-0.5))xx(j,idim,ind)=xx(j,idim,ind)+boxlen
            end do
            r_rel(1:3)=xx(j,1:3,ind)-xsink(isink,1:3) 
-!#ifdef MS
-!           do idim=1,ndim
-!              if((abs(r_rel(idim)))>1.0d0)then 
-!               write(*,'("r_rel:",3(1X,1PE14.7))'), r_rel(1:3)
-!               r_rel(idim)=1.0d-5
-!              endif
-!           end do
-!#endif
-           !write(*,*)"r_rel",r_rel(1:3)
            r_abs=sum(r_rel(1:3)**2)**0.5      
 
            ! momentum in relative motion
            p_rel=d*vol_loc*(vv(1:3)-vsink(isink,1:3))
-           !write(*,'("vsink_p:",3(1X,1PE14.7))'),vsink(isink,1:3) 
-!#ifdef MS
-!           do idim=1,ndim
-!              if((abs(p_rel(idim)))>1.0d0)then 
-!               write(*,'("p_rel:",3(1X,1PE14.7))'), p_rel(1:3)
-!               p_rel(idim)=1.0d-5
-!              endif
-!           end do
-!#endif
-           !write(*,*)"p_rel",p_rel(1:3)
            p_rel_rad=sum(r_rel(1:3)*p_rel(1:3))*r_rel(1:3)/(r_abs**2+tiny(0.d0))
            p_rel_tan=p_rel-p_rel_rad
 #ifdef MS
@@ -1253,12 +1149,7 @@ subroutine accrete_sink(ind_grid,ind_part,ind_grid_part,ng,np,ilevel,on_creation
            end if
 #endif
            if (detailedSMBH) then
-              !write(*,*)"lmom_gas_new",lmom_gas_new(isink,1:3)
-              !write(*,'("cross:",3(1X,1PE14.7))'), lmom_gas_new(isink,1:3)
               lmom_gas_new(isink,1:3)=lmom_gas_new(isink,1:3)+cross(r_rel(1:3),p_rel(1:3))
-               !write(*,'("lmom:",3(1X,1PE14.7))'), lmom_gas_new(isink,1:3)
-               !write(*,'("r_rel:",3(1X,1PE14.7))'), r_rel(1:3)
-               !write(*,'("density:",(1X,1PE14.7))'), d*vol_loc
            else
               lmom_gas_new(isink,1:3)=0d0
            end if
@@ -1282,31 +1173,11 @@ subroutine accrete_sink(ind_grid,ind_part,ind_grid_part,ng,np,ilevel,on_creation
            delta_x(1:3)=virt_acc_mass*(xx(j,1:3,ind)-xsink(isink,1:3))
            
            ! Add accreted properties to sink variables
-           !if(isink.ne.1)write(*,*)'isink=',isink
-           !write(*,*)'acc_mass=',msink_new(isink),acc_mass
-           !write(*,*)'dMsink_overdt=',dMsink_overdt(isink)
-           !write(*,*)'dtnew(ilevel)=',dtnew(ilevel)
-           !write(*,*)'weight=',weight
-           !write(*,*)'volume=',volume
-           !if(d<1.0)write(*,*)'d=',d
-           !if(density<1.0)write(*,*)'density=',density
-           !write(*,*)'vol_loc=',vol_loc
            msink_new(isink)=msink_new(isink)+acc_mass
            delta_mass_new(isink)=delta_mass_new(isink)+acc_mass
            xsink_new(isink,1:3)=xsink_new(isink,1:3)+x_acc(1:3)+delta_x(1:3)
-           !write(*,'("xsink_new:",3(1X,1PE14.7))'), xsink_new(isink,1:3) 
-           !write(*,'("x_acc:",3(1X,1PE14.7))'), x_acc(1:3)
-           !write(*,'("delta_x:",3(1X,1PE14.7))'), delta_x(1:3) 
            vsink_new(isink,1:3)=vsink_new(isink,1:3)+p_acc(1:3)+delta_p(1:3)
            lsink_new(isink,1:3)=lsink_new(isink,1:3)+cross(r_rel(1:3),p_rel_acc(1:3))
-           !if(any(abs(lsink_new(isink,1:3)).gt.1))then
-              !lsink_new(isink,1:3)=tiny(0.0d0)
-              !write(*,'("vsink_new:",3(1X,1PE14.7))'), vsink_new(isink,1:3)
-              !write(*,'("p_acc:",3(1X,1PE14.7))'), p_acc(1:3)
-              !write(*,'("delta_p",3(1X,1PE14.7))'), delta_p(1:3)
-              !write(*,'("p_rel_acc:",3(1X,1PE14.7))'), p_rel_acc(1:3)
-              !write(*,'("lsink:",3(1X,1PE14.7))'), lsink(1,1:ndim)
-           !end if
 
            ! Check for neg density inside sink accretion radius
            if (8*acc_mass/(vol_loc+tiny(0.0d0))>d .and. (.not. on_creation))then 
@@ -1354,12 +1225,6 @@ subroutine accrete_sink(ind_grid,ind_part,ind_grid_part,ng,np,ilevel,on_creation
               ! regular accretion from unew
               unew(indp(j,ind),1)=unew(indp(j,ind),1)-acc_mass/vol_loc-virt_acc_mass/vol_loc+virt_acc_mass/vol_loc*density/d
               if (floor_acc) unew(indp(j,ind),1)=max(unew(indp(j,ind),1),rho_min_acc_code)
-              !if (floor_acc)then
-              ! unew(indp(j,ind),1)=max(unew(indp(j,ind),1),rho_min_acc_code)
-              ! if(.not.(unew(indp(j,ind),1).gt.1d-5))then
-              !    write(*,*)'floor accretion',unew(indp(j,ind),1), rho_min_acc_code
-              ! endif
-              !endif
               unew(indp(j,ind),2:4)=unew(indp(j,ind),2:4)-vv(1:3)*acc_mass/vol_loc-delta_p(1:3)/vol_loc
               ! fix the energy equation to account for the work of the truly accreted material 
               unew(indp(j,ind),5)=unew(indp(j,ind),5)-uold(indp(j,ind),5)*acc_mass/(d*vol_loc)+delta_e_tot/vol_loc
@@ -1377,7 +1242,6 @@ subroutine accrete_sink(ind_grid,ind_part,ind_grid_part,ng,np,ilevel,on_creation
               if(agn)then
                 if(ok_blast_agn(isink).and.delta_mass(isink)>0.0)then
                   if(AGN_fbk_frac_ener.gt.0.0)then ! thermal AGN feedback
-                     !write(*,*)'ener_AGN',AGN_fbk_frac_ener
                      fbk_ener_AGN_store = fbk_ener_AGN/vol_loc 
                      unew(indp(j,ind),5)=unew(indp(j,ind),5)+fbk_ener_AGN/vol_loc
                   else
@@ -1385,7 +1249,6 @@ subroutine accrete_sink(ind_grid,ind_part,ind_grid_part,ng,np,ilevel,on_creation
                   end if
 
                   if(AGN_fbk_frac_mom.gt.0.0)then ! momentum AGN feedback
-                     !write(*,*)'mom_AGN',AGN_fbk_frac_mom
                      ! checking if particle is in cone
                      cone_dir(1:3)=lsink(isink,1:3)/sqrt(sum(lsink(isink,1:3)**2))
                      cone_dist=sum(r_rel(1:3)*cone_dir(1:3))
@@ -1432,15 +1295,6 @@ subroutine accrete_sink(ind_grid,ind_part,ind_grid_part,ng,np,ilevel,on_creation
                end if   !closes ok_balst_agn
             end if      !closes agn
             
-!#ifdef MS              
-!            if(floor_acc)then
-!               !if(unew(indp(j,ind),1) < 0.0d0)then
-!               !   write(*,'("WARNING: neg density in accrete_sink, d=",1PE12.4,1PE12.4)') &
-!               !        & unew(indp(j,ind),1), unew(indp(j,ind),5)
-!               !endif
-!               unew(indp(j,ind),1) = max(unew(indp(j,ind),1), rho_min_acc_code)
-!            endif
-!#endif
          end if         !closes if on_creation (newborn sinks accrete from uold, otherwise from unew)   
 
       endif             !closes ok(j,ind)
@@ -1510,11 +1364,8 @@ subroutine compute_accretion_rate(write_sinks)
      metalc=0d0
      do i=levelmin,nlevelmax
         density=density+weighted_density(isink,i)
-        !if(isnan(density))write(*,'("density isnan:",2(1X,1PE14.7))'),density   !checked, its not NaN 
         ethermal=ethermal+weighted_ethermal(isink,i)
-        !if (.not. any(isnan(weighted_momentum(isink,i,1:3))))then
-         velocity(1:3)=velocity(1:3)+weighted_momentum(isink,i,1:3)
-        !endif
+        velocity(1:3)=velocity(1:3)+weighted_momentum(isink,i,1:3)
         volume=volume+weighted_volume(isink,i)
         divergence=divergence+weighted_divergence(isink,i)
         if (detailedSMBH) then
@@ -1527,13 +1378,11 @@ subroutine compute_accretion_rate(write_sinks)
      density=density/(volume+tiny(0.0_dp))
      if (detailedSMBH) metalc=metalc/(volume+tiny(0.0_dp))
      if (density>0)then
-        !write(*,'("compute_accretion:",5(1X,1PE14.7))'), density,velocity(1:3),volume 
         velocity(1:3)=velocity(1:3)/(density*volume+tiny(0.0_dp))
         Ethermal=ethermal/(density*volume+tiny(0.0_dp))
         c2=MAX((gamma-1.0)*ethermal,smallc**2)
         c2sink(isink)=c2
 #ifdef MS
-        !write(*,'("velocity:",3(1X,1PE14.7))'), velocity(1:3)
         if(any(isnan(xsink(isink,1:ndim))))then
          write(*,'("xsinknan_a:",3(1X,1PE14.7))') xsink(isink,1:ndim)
          xsink(isink,1:ndim)=tracker(1)%xpos
@@ -1541,41 +1390,18 @@ subroutine compute_accretion_rate(write_sinks)
         endif
         if(any(abs(xsink(isink,1:ndim))>1.0d0))then
         write(*,'("xsink_a:",3(1X,1PE14.7))') xsink(isink,1:ndim) 
-        !write(*,'("xsink:",3(1X,1PE14.7))'), sink_jump(isink,1:ndim, levelmin:levelmax) 
-         !do lev=levelmin,nlevelmax
-         !sink_jump(isink,1:ndim,lev)=sink_jump(isink,1:ndim,lev)-xsink(isink,1:ndim)
-         !end do
          xsink(isink,1:ndim)=tracker(1)%xpos
-         !do lev=levelmin,nlevelmax
-         !sink_jump(isink,1:ndim,lev)=sink_jump(isink,1:ndim,lev)+xsink(isink,1:ndim)
-         !end do
 
-         !write(*,'("xsink:",3(1X,1PE14.7))'), xsink(isink,1:ndim) 
         endif
         if(any(abs(vsink(isink,1:ndim))>1.0d0))then
-         !write(*,'("vsink:",3(1X,1PE14.7))'), vsink(isink,1:3)
          vsink(isink,1:ndim)=tracker(1)%vel
-         !write(*,'("vsink:",3(1X,1PE14.7))'), vsink(isink,1:3)
         endif
         if(any(isnan(vsink(isink,1:ndim))))then
          vsink(isink,1:ndim)=tracker(1)%vel
-         !write(*,'("vsinknan:",3(1X,1PE14.7))'), vsink(isink,1:3)
         endif
-!!        if (isnan(v2).or.v2>1.0d0) v2 = tiny(0.0d0)
-!        if(isnan(v2))then 
-!        !if(isnan(v2) .or. v2.gt.1.0d1)then 
-!         write(*,'("v2:",1(1X,1PE14.7))'), v2
-!         v2 = MAX(v2,1.0d0)
-!        endif
         v2=SUM((velocity(1:3)-vsink(isink,1:3))**2)
-        !write(*,'("v2:",7(1X,1PE14.7))'), v2,velocity(1:3),vsink(isink,1:3)
 #endif
-
-        !if (isnan(v2)) v2 = tiny(0.0d0)
-!        write(*,'("compute_accretion:",4(1X,1PE14.7))'),vsink(isink,1:3),v2
-
         v_bondi=sqrt(c2+v2)
-        !write(*,'("vbondi:",1(1X,1PE14.7))'), v_bondi
         
         ! Compute Bondi-Hoyle accretion rate in code units
         if (star.and.acc_sink_boost.lt.0.0)then
@@ -2557,14 +2383,6 @@ subroutine update_sink(ilevel)
         
         ! this is the kick-kick (half old half new timestep)
         vsink(isink,1:ndim)=0.5D0*(dtnew(ilevel)+dteff)*fsink(isink,1:ndim)+vsink(isink,1:ndim)
-!#ifndef MS
-!        do idim=1,ndim
-!           if((abs(vsink(isink,idim)))>1.0d0)then 
-!            write(*,'("vsink:",3(1X,1PE14.7))'), vsink(isink,idim)
-!            vsink(isink,idim)=sign(1.0d-2, vsink(isink,idim))
-!           endif
-!        end do
-!#endif
         
         ! save the velocity
         vsnew(isink,1:ndim,ilevel)=vsink(isink,1:ndim)
@@ -2578,8 +2396,6 @@ subroutine update_sink(ilevel)
 #ifdef MS
         ! Clamp vsink after kicks, before drift
         if(any(abs(vsink(isink,1:ndim))>1.0d0) .or. any(isnan(vsink(isink,1:ndim))))then
-           !write(*,'("vsink_u:",3(1X,1PE14.7)," fsink:",3(1X,1PE14.7))') &
-           !    vsink(isink,1:ndim), fsink(isink,1:ndim)
            vsink(isink,1:ndim)=tracker(1)%vel
            vsnew(isink,1:ndim,ilevel)=vsink(isink,1:ndim)
         endif
@@ -2589,7 +2405,6 @@ subroutine update_sink(ilevel)
 #ifdef MS
          if(any(isnan(xsink(isink,1:ndim))).or. &
             any(abs(xsink(isink,1:ndim))>1.0d0))then 
-          !write(*,'("xsink_u:",3(1X,1PE14.7))'), xsink(isink,1:ndim)
           xsink(isink,1:ndim)=tracker(1)%xpos
          endif
 #endif
@@ -2720,7 +2535,7 @@ subroutine upd_cloud(ind_part,np)
         do idim=1,ndim
            if(xp(ind_part(j),idim).lt.0.0d0 .or. xp(ind_part(j),idim).gt.boxlen) then
               write(*,'("RESET cloud:"," xp=",1PE14.7," -> xsink=",1PE14.7)') &
-                   xp(ind_part(j),idim), xsink(isink,idim)
+                 xp(ind_part(j),idim), xsink(isink,idim)
                  xp(ind_part(j),idim)=tracker(1)%xpos(idim)
                  vp(ind_part(j),idim)=tracker(1)%vel(idim)
            endif
@@ -2732,7 +2547,6 @@ subroutine upd_cloud(ind_part,np)
   ! Overwrite cloud particle mass with sink mass
   do j=1,np
      isink=-idp(ind_part(j))
-     if(isink==0)write(*,*),'error in upd_cloud: isink=0'
      ! if((isink.gt.0).and.(mp(ind_part(j))>0.) then
      if((idp(ind_part(j)).lt.0).and.(mp(ind_part(j))>0.).and.&
           & (tp(ind_part(j)).eq.0.0d0)) then
@@ -2752,7 +2566,6 @@ subroutine upd_cloud(ind_part,np)
   do idim=1,ndim
      do j=1,np
         isink=-idp(ind_part(j))
-        if(isink==0)write(*,*),'error in upd2_cloud: isink=0'
         ! if (isink>0) then
         if ((idp(ind_part(j)).lt.0).and.(tp(ind_part(j)).eq.0.0d0)) then
 #ifdef MS
@@ -2792,7 +2605,6 @@ subroutine upd_cloud(ind_part,np)
   do idim=1,ndim
      do j=1,np
         isink=-idp(ind_part(j))
-        if(isink==0)write(*,*),'error in upd3_cloud: isink=0'
         ! if(isink>0)then
         if ((idp(ind_part(j)).lt.0).and.(tp(ind_part(j)).eq.0.0d0)) then
            lev=level_p(j)
@@ -2800,7 +2612,6 @@ subroutine upd_cloud(ind_part,np)
 #ifndef MS
               new_xp(j,idim)=new_xp(j,idim)+sink_jump(isink,idim,lev)
 #else
-              !write(*,*),sink_jump(isink,1:ndim,lev)
               if (any(isnan(sink_jump(isink,1:ndim,lev))) .or. &
                    any(abs(sink_jump(isink,1:ndim,lev)).gt.1.0d0)) then
                  write(*,'("WARNING upd_cloud:",3(1X,1PE14.7))'), sink_jump(isink,1:ndim,lev)
@@ -3247,26 +3058,11 @@ subroutine f_gas_sink(ilevel)
                        if(ff(i,idim)>0.5*boxlen)ff(i,idim)=ff(i,idim)-boxlen
                        if(ff(i,idim)<-0.5*boxlen)ff(i,idim)=ff(i,idim)+boxlen
                        d2(i)=d2(i)+ff(i,idim)**2
-!#ifdef MS
-!                       ! Check for invalid or extreme values
-!                       !if (isnan(ff(i, idim)) .or. abs(ff(i, idim)) > 1.0d0) then
-!                          write(*,*) "Invalid ff detected: ", ff(i, idim)
-!                          write(*,*) "Invalid xsink=", xsink(isink, idim), "xx=", xx(i, idim)
-!                       !end if
-!#endif
                     end do
                  else
                     do i=1,ngrid
                        ff(i,idim)=xsink(isink,idim)-xx(i,idim)
                        d2(i)=d2(i)+ff(i,idim)**2
-!#ifdef MS
-!                       ! Check for invalid or extreme values
-!                       !if (isnan(ff(i, idim)) .or. abs(ff(i, idim)) > 1.0d0) then
-!                          write(*,*) "Invalid ff detected2: ", ff(i, idim)
-!                          write(*,*) "Invalid xsink2=", xsink(isink, idim), "xx2=", xx(i, idim)
-!                       !end if
-!#endif
-
                     end do
                  end if
               end do
@@ -3334,12 +3130,6 @@ subroutine f_gas_sink(ilevel)
 #else
   rho_tff_tot=rho_tff
 #endif
-  !add a print for rho_tff_tot
-!#ifdef MS
-!  if (myid==1)then
-!      write(*,*)'rho_tff_tot',rho_tff_tot
-!  end if
-!#endif
   rho_sink_tff(ilevel)=rho_tff_tot
   
   
@@ -3566,7 +3356,6 @@ subroutine read_sink_params()
      !mass_sink_direct_force=1.0d0
   end if
 
-  if(myid==1) write(*,*) 'DEBUG: floor_acc=', floor_acc, ' rho_min_acc=', rho_min_acc
 end subroutine read_sink_params
 !################################################################
 !################################################################
@@ -3754,7 +3543,6 @@ subroutine count_clouds_np(ind_grid,ind_part,ind_grid_part,ng,np,action,ilevel)
      do ind=1,twotondim
         do i=1,np
            isink=-idp(ind_part(i))
-           if(isink==0)write(*,*),'oups in count clouds np'
            parts_per_cell=8*8.**(nlevelmax-ilevel)
            weight=vol_min*0.125*vol(i,ind)
            if (rho(cind_part(i,ind))>parts_per_cell)then
@@ -4748,11 +4536,6 @@ subroutine get_drag_part(ilevel)
      call MPI_ALLREDUCE(n_partnew, n_partall,nsinkmax*2,MPI_INTEGER,MPI_SUM,MPI_COMM_WORLD,info)
      call MPI_ALLREDUCE(mass_lowspeednew, mass_lowspeedall,nsinkmax*2,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,info)
      call MPI_ALLREDUCE(fact_fastnew, fact_fastall,nsinkmax*2,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,info)
-     if(myid==1)then
-      write(*,'("SVD_MPI:",3(1X,1PE14.7))'), v_DFall
-      write(*,'("SND_MPI:",1(1X,I10))'), n_partall 
-      write(*,'("SMD_MPI:",3(1X,1PE14.7))'), mass_DFall, mass_lowspeedall, fact_fastall
-     endif
 #else
      v_DFall(1:nsink, 1:ndim, 1:2)  = v_DFnew(1:nsink, 1:ndim, 1:2)
      mass_DFall(1:nsink, 1:2)       = mass_DFnew(1:nsink, 1:2)
