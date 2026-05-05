@@ -1,0 +1,288 @@
+&RUN_PARAMS
+cosmo=.false.
+pic=.true.	!Activate Particle-In-Cell solver
+poisson=.true.
+hydro=.true.
+ordering='hilbert'
+nrestart=999
+nremap=10
+nsubcycle=1,1,1,1,1,1,2,2,2,2,2
+rt=.true.
+sink=.true.
+verbose=.false.
+!clumpfind=.false.
+/
+
+&OUTPUT_PARAMS
+!foutput=10
+tend=10.0
+delta_tout=0.001
+output_mode=5
+/
+
+
+&INIT_PARAMS
+filetype='MFdice'
+!initfile(1)='/cosma8/data/dp016/dc-veen1/Galaxy9_128_AGN_RT_test2/'
+initfile(1)='/snap8/scratch/dp016/dc-sana1/TEST_forOscar/DB/SinkRT/'
+/
+
+&AMR_PARAMS
+levelmin=8
+levelmax=12
+nexpand=0
+ngridmax=400000
+npartmax=500000
+boxlen=500.0d0
+/
+
+&REFINE_PARAMS
+m_refine=26*8.,
+!ivar_refine=9
+!var_cut_refine=0.01
+!mass_cut_refine=1.86265e-09
+interpol_var=0
+interpol_type=0
+mass_sph=5.0d-3
+a_refine=26*1.0
+b_refine=26*1.0
+exp_refine=26*2.0
+sink_refine=.true.
+/
+
+&BOUNDARY_PARAMS
+nboundary = 6
+bound_type= 2, 2, 2, 2, 2, 2
+ibound_min=-1,+1,-1,-1,-1,-1
+ibound_max=-1,+1,+1,+1,+1,+1
+jbound_min= 0, 0,-1,+1,-1,-1
+jbound_max= 0, 0,-1,+1,+1,+1
+kbound_min= 0, 0, 0, 0,-1,+1
+kbound_max= 0, 0, 0, 0,-1,+1
+/
+
+&POISSON_PARAMS
+gravity_type=0
+cg_levelmin=12		!Minimum level from which the Conjugate Gradient solver is used in place of the Multigrid solver.
+cic_levelmax=20
+epsilon=1d-4
+/
+
+&HYDRO_PARAMS
+gamma=1.666666667
+courant_factor=0.8
+slope_type=1		!Type of slope limiter used in the Godunov scheme for the piecewise linear reconstruction,  slope_type=1: MinMod limiter
+pressure_fix=.true.	!Activate hybrid scheme (conservative or primitive) for high-Mach flows. Useful to prevent negative temperatures
+scheme='muscl'		!Name of the desired Godunov integrator
+riemann='hlld'
+riemann2d='hlld'
+beta_fix=0.5		!With pressure_fix=.true., changes the threshold at which the energy is truncated
+/
+
+&PHYSICS_PARAMS
+maxlev_sf=.true.	!Rasera 2006
+local_dmax=.false.
+omega_b=0.0486
+!z_reion=9.		!Reionization redshift (UV background disabled for higher redshifts)
+haardt_madau=.false.	!Enable UV background
+self_shielding=.true.	!Enable self-shielding for densities above 0.01 g.cm^-3
+cooling=.true.		!Enable gas atomic & metal cooling	
+neq_chem=.false.	!Enable non-equilibrium chemistry
+metal=.true. ! Def: true.	!Enable metals advection (requires 1 hydro variable)
+! z_ave=0.001 ! 0.001 for EDGE dwarf / 6.35d-5 for Dw1
+z_ave=6.35d-5		!Initial average metal abundance
+n_star=10.		!Star formation density threshold in H/cc
+n_gmc=10.
+del_star=200. 		!Star formation density threshold in critical density (2*10**2)
+t_star=0.632456 ! Def: 0.632456		!Star formation time scale in Gyr
+T2_star=0.001d0		!Typical ISM polytropic temperature (cooling floor if isothermal=.false.)	With MF it should be 1K
+g_star=1.0		!Typical ISM polytropic index (cooling floor if isothermal=.false.)
+eta_sn=0.2 ! Kroupa IMF		!Mass fraction of newly formed stars that explode into supernovae
+jeans_ncells=-1			!Jeans polytropic equation of state (cooling floor if isothermal=.false.)
+yield=0.075 ! Def: 0.075	!Supernova metal yield (Mass fraction of newly formed stars that explode into supernovae)
+star_maker='FKmag'		!without MFs Federrar and Klessen 2012
+mechanical_feedback=.true.
+mechanical_geen=.false.		!Stronger feedback for SNe in denser regions 
+sn2_real_delay=.true.		!allow for multiple SNe events from one stellar particles (based on IMF and stellar evolutions)
+use_initial_mass=.true.
+t_sne=50.		!Supernova blast time in Myr (all SNe events for each stellar particles happen between 0-50 Myr)	If delay is false t_sne=5
+!nsn2mass=1024 ! Keep an eye on this! 
+nsn2mass=6 ! Keep an eye on this! 	!50*6=300 check on the log file as Mstar,min 
+fstar_min=-1		!Mstar,min = nH*dx_min^3*fstar_min	fstar<0 not used
+!log_mfb=.false. ! Def: .true.
+log_mfb=.true. ! Def: .true.		!rho, T, M of cell that explode SNe
+!log_sf=.true.
+M_SNII=10.0 ! SPHINX uses 5.0 to boost feedback 	!higth of IMF eta: the slope
+sf_lam=1	!N of neighboring cells needs to start the collapse
+B_ave=3.0d-20
+injBfac=0.01d0
+mhd_AGN=.false.
+!################## SMBH physics ###################
+ir_feedback=.false. !# Activate ir feedback from accreting sinks
+ir_eff=0.75d0       !# efficiency of the IR
+ind_rsink=4.0d0     !# Number of cells for radius active AGN sphere
+smbh=.true.         !# SMBH behaviour (i.e. Bondi accretion)
+agn=.true.          !# AGN feedback
+!units_density = 6.769911E-22 ! converts 1e10 Msol/kpc^3 -> g/cc
+units_density = 1.57339152800000E-26 ! converts 1e10 Msol/kpc^3 -> g/cc
+units_time    = 3.085678E+16 ! G=1
+units_length  = 3.085678e+21 ! 1kpc
+/
+
+! ####################################
+! ####################################
+&SINK_PARAMS
+! General parameters #################
+nsinkmax=1                    !# Maximum number of sink particles
+create_sinks=.false.          !# Formation of new sinks activated
+rho_sink=1.0d-20              !# Sink particle (minimum) density threshold in g/cc
+! SMBH seeding with center of mass ###
+seed_smbh_com=.true.          !# Activates the center of mass SMBH seeding
+smbh_mass_track_mass=1.0d5    !# Initial sink mass. For < 0 => SMBH heat to 10^7 K based recipe (units: Msun)
+! ####################################
+! Accretion parameters ###############
+detailedSMBH=.true.           !# Detailed prints for SMBH evolution
+nol_accretion=.false.         !# Maintain angular mom in gas at accretion
+eddington_limit=.false.        !# Switch for Eddington limit for the SMBH case
+!acc_sink_boost=-1.0d0         !# Boost coefficient for accretion (negative for Horizon model)
+acc_sink_boost=1.0d0         !# Boost coefficient for accretion (negative for Horizon model)
+accretion_scheme='bondi'      !# Sink accretion scheme
+! ####################################
+! AGN feedback parameters ############
+verbose_AGN=.true.            !# Controls print verbosity for the SMBH case
+!T2_AGN=1.0d12                 !# AGN blast temperature (units: K)
+T2_AGN=1.0d9                 !# AGN blast temperature (units: K)
+v_AGN=1.0d4                   !# AGN blast velocity (units: km/s)
+!feedback_scheme='energy'      !# AGN feedback scheme: 'energy' or 'momentum'
+!feedback_scheme='momentum'      !# AGN feedback scheme: 'energy' or 'momentum'
+cone_opening=180.             !# Outflow cone opening angle (units: degree)
+AGN_fbk_mode_switch_threshold=1.0d-2
+AGN_fbk_frac_mom=0.15d0
+AGN_fbk_frac_ener=0.15d0
+AGN_fbk_frac_RT=0.70d0
+AGN_fbk_frac_mhd=0.0d0
+! ####################################
+! Other parameters ###################
+!sink_drag=.true.              !# Gas dragging sink
+sink_drag=.false.              !# Gas dragging sink
+drag_part=.true.              !# Hugo's dynamical friction
+!drag_part=.false.              !# Hugo's dynamical friction
+DF_ncells=5                   !# Number of cells used for dynamical friction
+sink_soft=1.0d0               !# Sink grav softening length in dx at lmax (for direct force sinks)
+c_acc=-1.0d0                  !# "courant factor" for sink accretion in timestep control
+mass_sink_direct_force=-1.0d0 !# mass above which sinks are treated as direct force
+!# (only when 'timescale' is used), also contraction timescale in creation
+! Not used:
+clump_core=.false.            !# Trims the clump (for star formation)
+merging_timescale=-1.0d0      !# Time during which sinks are considered for merging
+mass_merger_vel_check_AGN=-1.0d0 !# Threshold for velocity check in merging (units: Msun)
+mass_halo_AGN=1.0d10          !# Minimum mass of the halo for sink creation (units: Msun)
+ir_cloud=4                    !# Radius of cloud region in unit of grid (accretion radius!)
+ir_cloud_massive=3            !# Radius of massive cloud region in unit of grid spacing for PM sinks
+!flux_accretion=.true.
+! n_sink=                     !# Sink particle density threshold in H/cc
+! d_sink=                     !# Sink particle density threshold in user units
+/
+! ####################################
+
+&RT_PARAMS
+rt_isIR=.false.		!Not using IR
+rt_isIRtrap=.false.
+rt_isoPress=.true.	!Pressure of RT is isothropic
+rt_smooth=.true.	!No radiation fronts (For high Res)
+SED_isEgy=.false.	!Units of SED tables
+rt_output_coolstats=.true.
+rt_star=.true.
+rt_AGN=.true.
+rt_otsa=.true.
+!uv_file='/cosma8/data/dp016/dc-sana1/Runs/support_files/UV/HM/flux_zz_ramses_Q1G00.out'
+sed_dir='/cosma8/data/dp016/dc-sana1/Runs/support_files/bpassv2_300/'
+sedprops_update=10
+rt_esc_frac=1.0        ! we may calibrate this for sensible reionisation 	escape fraction
+rt_nsubcycle=500	!subcycling
+rt_c_fraction=20*0.01	!speed of light fraction
+showIonizationFraction=.true.
+group_egy_AGNfrac=7.9d-2,6.7d-2,8.5d-2
+/
+
+&TRACKER_PARAMS
+! General trackers
+track_center_mass=.true.
+track_center_stars=.true.
+track2logfile=.true.
+track_velocity=.true.
+track_quantities=.true.
+! Trackers configurations
+ntracker=1
+xtrack_center_mass_def=250.0
+ytrack_center_mass_def=250.0
+ztrack_center_mass_def=250.0
+aexp_track=0.01
+nsink_com=1                   !# Number of maximum sinks for com seeding
+aexp_sink_com=0.02    !# Scale factor over which com seeding is active
+!ntrack_com_use=1000     !N particles tracked
+ntrack_com_use=500     !N particles tracked
+!max_dist_track_def=0.05         ! max distance tracker looks for particles comoving in code units smaller than virial radius (can be lower)
+max_dist_track_def=0.1         ! max distance tracker looks for particles comoving in code units smaller than virial radius (can be lower)
+! Trackers measurements
+do_tracker_measure=1
+tracker_radphys_measure=0.0
+tracker_radcom_measure=5.0! 37.5 kpc comoving for 25 Mpc box  !radius
+! Sink seeding
+! aexp_sink_com=1.0d0
+! nsink_com=0
+/
+
+!&MOVIE_PARAMS
+!do_center_track_movie=.true.,.true.
+!!aexp_track_movie=0.04333784152817703,0.04333784152817703
+!aexp_track_movie=0.04721551044160092,0.04721551044160092
+!itracker_movie=1,1
+!imovout=400    !increase
+!aendmov=0.11    !decrease
+!imov=1
+!movie=.true.
+!nw_frame=1920
+!nh_frame=1920
+!levelmax_frame=20
+!xcentre_frame=0.498771667480469, 0, 0, 0,0.498771667480469, 0, 0, 0
+!ycentre_frame=0.502677917480469, 0, 0, 0,0.502677917480469, 0, 0, 0
+!zcentre_frame=0.492835998535156, 0, 0, 0,0.492835998535156, 0, 0, 0
+!deltax_frame=0.255, 0, 0.03125, 0
+!deltay_frame=0.255, 0, 0.03125, 0
+!deltaz_frame=0.255, 0, 0.03125, 0
+!proj_axis='zz'
+!!#########################################################################
+!movie_vars_txt='dens','temp','dm','stars','100Myr','oldstr','var7','lum','xHII','xHeII','xHeIII','pmag'
+!!#########################################################################
+!/
+
+&DICE_PARAMS
+!ic_file='Galaxy9_lowres.g2'          ! Name of the initial conditions file
+dice_mfr=.true.
+dmf_loop=1
+!ic_nfile=1                    ! If greater than one, look for files with name matching ic_file//'.n'
+!ic_ifout=1                    ! Change ramses output index for restarts
+!ic_format='Gadget2'           ! Format of the initial conditions. 'Gadget1' or 'Gadget2'
+ic_center=0.0,0.0,0.0         ! Shift center parameter. ICs are automatically shifted with boxlen/2
+ic_scale_pos=1.0              ! Scaling factor for the position vector 
+ic_scale_vel=1.0              ! Scaling factor for the velocity vector
+ic_scale_mass=1.0d10          ! Scaling factor for the mass
+ic_scale_u=1.0                ! Scaling factor for the internal energy
+ic_scale_age=1.0              ! Scaling factor for the particles age
+ic_scale_metal=0.019d0        ! Scaling factor for the metallicity
+IG_rho=1.82514E-06            ! Intergalactic gas density
+IG_T2=9.77370E+05             ! Intergalactic gas temperature
+IG_metal=2.28855E-01          ! Intergalactic gas metallicity
+amr_struct=.false.    !tructure of the Gadget2 file resulting from a ramses to gadget conversion
+ic_mag_const=0.0,0.0,0.0      ! Background magnetic field value for x,y,z component
+ic_mag_center_x=0.0           ! x-coordinate of the magnetic field symmetry center
+ic_mag_center_y=0.0           ! y-coordinate of the magnetic field symmetry center
+ic_mag_center_z=0.0           ! z-coordinate of the magnetic field symmetry center
+ic_mag_axis_x=0.0             ! Magnetic field normal vector x-component 
+ic_mag_axis_y=0.0             ! Magnetic field normal vector y-component 
+ic_mag_axis_z=1.0             ! Magnetic field normal vector z-component 
+ic_mag_scale_R=0.0            ! Toroidal magnetic field scalelength
+ic_mag_scale_H=0.0            ! Toroidal magnetic field scaleheight
+ic_mag_scale_B=0.0            ! Foreground toroidal magnetic field value (in G?)
+/
