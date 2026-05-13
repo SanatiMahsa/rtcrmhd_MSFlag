@@ -1353,15 +1353,17 @@ subroutine compute_accretion_rate(write_sinks)
               ok_blast_agn(isink)=.false.
               T2_gas=ethermal*scale_T2 ! in Kelvin
               delta_mass_min = mgas*(T2_min-T2_gas)/(T2_AGN-T2_min)
-              if((T2_gas.ge.T2_min).or.(delta_mass(isink).ge.mgas*(T2_min-T2_gas)/(T2_AGN-T2_min)))then
+              write(*,*)'T2_gas=',T2_gas,' delta_mass_min=',delta_mass_min*scale_m 
+              if((T2_gas.ge.T2_min).and.(delta_mass(isink).ge.delta_mass_min))then
                 ok_blast_agn(isink)=.true.
               end if
               if(myid==1.and.verbose_AGN.and.ok_blast_agn(isink).and.delta_mass(isink).gt.0.)then
-                write(*,'("***BLAST***",I4,1X,4(1PE12.5,1X))')isink &
+                write(*,'("***BLAST***",I4,1X,5(1PE12.5,1X))')isink &
                     & ,msink(isink)*scale_d*scale_l**3/2d33 &  
                     & ,delta_mass(isink)*scale_d*scale_l**3/2d33 &
                     & ,((delta_mass(isink)*T2_AGN+mgas*T2_gas) &
-                    & /(delta_mass(isink)+mgas))
+                    & /(delta_mass(isink)+mgas)), &
+                    & T2_gas
               endif
 
               ! make sure that sink doesnt blast more than the gas internal energy within one timestep
