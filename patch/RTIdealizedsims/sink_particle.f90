@@ -833,6 +833,7 @@ subroutine grow_sink(ilevel,on_creation)
      acc_rate(isink)=acc_rate(isink)+msink_all(isink)
      if (agn.and.ok_blast_agn(isink))then
        delta_mass(isink)=delta_mass_all(isink) ! only the most recent accretion
+       ok_blast_agn(isink)=.false.   ! feedback fired, reset
      else
        delta_mass(isink)=delta_mass(isink)+delta_mass_all(isink)
      end if
@@ -1176,6 +1177,7 @@ subroutine accrete_sink(ind_grid,ind_part,ind_grid_part,ng,np,ilevel,on_creation
                      if (orth_dist.le.abs(cone_dist)*tan_theta)then
                         fbk_mom_AGN_store = sum(fbk_mom_AGN*r_rel(1:3)/(ir_cloud*dx_min)*vv(1:3))/vol_loc 
                         unew(indp(j,ind),2:4)=unew(indp(j,ind),2:4)+fbk_mom_AGN*r_rel(1:3)/(ir_cloud*dx_min)/vol_loc
+                        write(*,*)'unew after AGN',unew(indp(j,ind),2:4)
                         unew(indp(j,ind),5)=unew(indp(j,ind),5)+sum(fbk_mom_AGN*r_rel(1:3)/(ir_cloud*dx_min)*vv(1:3))/vol_loc
                      else
                         fbk_mom_AGN_store = 0.0d0
@@ -1350,11 +1352,12 @@ subroutine compute_accretion_rate(write_sinks)
            if(agn)then
 
               ! check whether we should have AGN feedback
-              ok_blast_agn(isink)=.false.
+              !ok_blast_agn(isink)=.false.
               T2_gas=ethermal*scale_T2 ! in Kelvin
               delta_mass_min = mgas*(T2_min-T2_gas)/(T2_AGN-T2_min)
-              write(*,*)'T2_gas=',T2_gas,' delta_mass_min=',delta_mass_min*scale_m 
-              if((T2_gas.ge.T2_min).and.(delta_mass(isink).ge.delta_mass_min))then
+              !write(*,*)'T2_gas=',T2_gas,' delta_mass_min=',delta_mass_min*scale_m 
+              if(.not.ok_blast_agn(isink)&   ! ok_blast_agn == .false.
+                .and.((T2_gas.ge.T2_min).or.(delta_mass(isink).ge.delta_mass_min)))then  !threshold met
                 ok_blast_agn(isink)=.true.
               end if
               if(myid==1.and.verbose_AGN.and.ok_blast_agn(isink).and.delta_mass(isink).gt.0.)then
