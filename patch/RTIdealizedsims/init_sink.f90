@@ -108,7 +108,8 @@ subroutine init_sink
   allocate(idsink_sort(1:nsinkmax))
   allocate(xmsink(1:nsinkmax))
   allocate(delta_mass_new(1:nsinkmax),delta_mass_all(1:nsinkmax))
-  allocate(ok_blast_agn(1:nsinkmax),ok_blast_agn_all(1:nsinkmax))
+  allocate(ok_blast_agn(1:nsinkmax)) !,ok_blast_agn_all(1:nsinkmax))
+  ok_blast_agn=.false.
   allocate(direct_force_sink(1:nsinkmax))
   allocate(new_born(1:nsinkmax),new_born_all(1:nsinkmax),new_born_new(1:nsinkmax))
 

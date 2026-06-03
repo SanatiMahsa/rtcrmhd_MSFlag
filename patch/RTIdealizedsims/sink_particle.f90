@@ -831,7 +831,8 @@ subroutine grow_sink(ilevel,on_creation)
 
      ! Store accreted mass
      acc_rate(isink)=acc_rate(isink)+msink_all(isink)
-     if (agn.and.ok_blast_agn(isink))then
+     !if (agn.and.ok_blast_agn(isink))then
+     if (agn.and.ok_blast_agn(isink).and..not.on_creation)then
        delta_mass(isink)=delta_mass_all(isink) ! only the most recent accretion
        ok_blast_agn(isink)=.false.   ! feedback fired, reset
      else
@@ -1050,8 +1051,8 @@ subroutine accrete_sink(ind_grid,ind_part,ind_grid_part,ng,np,ilevel,on_creation
                     end if
                  end if
                  fbk_ener_AGN=AGN_fbk_frac_ener*min(delta_mass(isink)*T2_AGN/scale_T2*weight/volume*d/density,T2_max/scale_T2*weight*d)
-                 !fbk_mom_AGN=sqrt(AGN_fbk_frac_mom)*min(delta_mass(isink)*v_AGN*(180./cone_opening)*1.e5/scale_v*weight/volume*d/density,v_max*1.e5/scale_v*weight*d)
-                 fbk_mom_AGN=sqrt(AGN_fbk_frac_mom)*(v_max*1.e5/scale_v*weight*d)
+                 fbk_mom_AGN=sqrt(AGN_fbk_frac_mom)*min(delta_mass(isink)*v_AGN*(180./cone_opening)*1.e5/scale_v*weight/volume*d/density,v_max*1.e5/scale_v*weight*d)
+                 !fbk_mom_AGN=sqrt(AGN_fbk_frac_mom)*(v_max*1.e5/scale_v*weight*d)
               end if
 
            end if
@@ -1177,7 +1178,6 @@ subroutine accrete_sink(ind_grid,ind_part,ind_grid_part,ng,np,ilevel,on_creation
                      if (orth_dist.le.abs(cone_dist)*tan_theta)then
                         fbk_mom_AGN_store = sum(fbk_mom_AGN*r_rel(1:3)/(ir_cloud*dx_min)*vv(1:3))/vol_loc 
                         unew(indp(j,ind),2:4)=unew(indp(j,ind),2:4)+fbk_mom_AGN*r_rel(1:3)/(ir_cloud*dx_min)/vol_loc
-                        write(*,*)'unew after AGN',unew(indp(j,ind),2:4)
                         unew(indp(j,ind),5)=unew(indp(j,ind),5)+sum(fbk_mom_AGN*r_rel(1:3)/(ir_cloud*dx_min)*vv(1:3))/vol_loc
                      else
                         fbk_mom_AGN_store = 0.0d0
