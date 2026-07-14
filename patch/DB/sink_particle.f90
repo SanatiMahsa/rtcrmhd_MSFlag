@@ -2335,8 +2335,10 @@ subroutine update_sink(ilevel)
   do_sink_force=.true.
 #ifdef TRACKER
   if (fix_sink2com) then
-     xsink(isink,1:ndim)=tracker(1)%xpos
-     vsink(isink,1:ndim)=tracker(1)%vel
+     do isink=1,nsink
+        xsink(isink,1:ndim)=tracker(1)%xpos
+        vsink(isink,1:ndim)=tracker(1)%vel
+     end do
      do_sink_force=.false.
   end if
 #endif
