@@ -226,16 +226,7 @@ subroutine create_cloud_from_sink
            rr=sqrt(sum(xrel**2))
            if(rr<=rmax)then
               do isink=1,nsink
-#ifndef MS
                  xtest(1,1:3)=xsink(isink,1:3)+xrel(1:3)
-#else
-                if(all(abs(xsink(isink,1:3)) < 1.0d0) .and. all(abs(xrel(1:3)) < 1.0d0)) then
-                 xtest(1,1:3)=xsink(isink,1:3)+xrel(1:3)
-                else
-                  write(*,*) 'xsink=', xsink(isink,1:3)
-                  write(*,*) 'xrel=', xrel(1:3)
-                endif
-#endif
                  in_box=.true.
                  do idim=1,ndim
                     if (period(idim) .and. xtest(1,idim)>boxlen)xtest(1,idim)=xtest(1,idim)-boxlen
@@ -884,8 +875,10 @@ subroutine grow_sink(ilevel,on_creation)
 
      ! Store accreted mass
      acc_rate(isink)=acc_rate(isink)+msink_all(isink)
-     if (agn.and.ok_blast_agn(isink))then
+     !if (agn.and.ok_blast_agn(isink))then
+     if (agn.and.ok_blast_agn(isink).and..not.on_creation)then
        delta_mass(isink)=delta_mass_all(isink) ! only the most recent accretion
+       ok_blast_agn(isink)=.false.   ! feedback fired, reset
      else
        delta_mass(isink)=delta_mass(isink)+delta_mass_all(isink)
      end if
@@ -1107,7 +1100,7 @@ subroutine accrete_sink(ind_grid,ind_part,ind_grid_part,ng,np,ilevel,on_creation
 
               ! No neg accretion
               acc_mass=max(acc_mass,0.0_dp)               
-
+            
               !Switch between quasar and radio mode
               if(agn.and.msink(isink).gt.0)then
                  acc_ratio=dMsink_overdt(isink)/(4.*3.1415926*6.67d-8*msink(isink)*1.66d-24/(0.1d0*6.652d-25*3d10)*scale_t)
@@ -1481,18 +1474,21 @@ subroutine compute_accretion_rate(write_sinks)
            if(agn)then
 
               ! check whether we should have AGN feedback
-              ok_blast_agn(isink)=.false.
+              !ok_blast_agn(isink)=.false.
               T2_gas=ethermal*scale_T2 ! in Kelvin
               delta_mass_min = mgas*(T2_min-T2_gas)/(T2_AGN-T2_min)
-              if((T2_gas.ge.T2_min).or.(delta_mass(isink).ge.mgas*(T2_min-T2_gas)/(T2_AGN-T2_min)))then
+              !write(*,*)'T2_gas=',T2_gas,' delta_mass_min=',delta_mass_min*scale_m 
+              if(.not.ok_blast_agn(isink)&   ! ok_blast_agn == .false.
+                .and.((T2_gas.ge.T2_min).or.(delta_mass(isink).ge.delta_mass_min)))then  !threshold met
                 ok_blast_agn(isink)=.true.
               end if
               if(myid==1.and.verbose_AGN.and.ok_blast_agn(isink).and.delta_mass(isink).gt.0.)then
-                write(*,'("***BLAST***",I4,1X,4(1PE12.5,1X))')isink &
+                write(*,'("***BLAST***",I4,1X,5(1PE12.5,1X))')isink &
                     & ,msink(isink)*scale_d*scale_l**3/2d33 &  
                     & ,delta_mass(isink)*scale_d*scale_l**3/2d33 &
                     & ,((delta_mass(isink)*T2_AGN+mgas*T2_gas) &
-                    & /(delta_mass(isink)+mgas))
+                    & /(delta_mass(isink)+mgas)), &
+                    & T2_gas
               endif
 
               ! make sure that sink doesnt blast more than the gas internal energy within one timestep
@@ -3355,7 +3351,6 @@ subroutine read_sink_params()
 
   if(mass_sink_direct_force<0.)then 
      mass_sink_direct_force=huge(0._dp)
-     !mass_sink_direct_force=1.0d0
   end if
 
 end subroutine read_sink_params
