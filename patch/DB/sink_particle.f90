@@ -1112,6 +1112,11 @@ subroutine accrete_sink(ind_grid,ind_part,ind_grid_part,ng,np,ilevel,on_creation
                        AGN_fbk_frac_ener = 1.0d-10
                        AGN_fbk_frac_RT = 1.0d-10
                        !AGN_fbk_frac_mom = 1
+#ifdef MS
+                    else
+                       AGN_fbk_frac_ener = AGN_fbk_frac_ener_nml
+                       AGN_fbk_frac_RT = AGN_fbk_frac_RT_nml
+#endif
                     end if
                  end if
                  fbk_ener_AGN=AGN_fbk_frac_ener*min(delta_mass(isink)*T2_AGN/scale_T2*weight/volume*d/density,T2_max/scale_T2*weight*d)
@@ -3261,6 +3266,10 @@ subroutine read_sink_params()
 111 if(myid==1)write(*,*)'You did not set up &SINK_PARAMS in the namelist file'
   if(myid==1)write(*,*)'Using default values '
 112 rewind(1)
+#ifdef MS
+  AGN_fbk_frac_ener_nml = AGN_fbk_frac_ener
+  AGN_fbk_frac_RT_nml   = AGN_fbk_frac_RT
+#endif
 
   if (sink .and. (ndim .ne. 3))then
      if(myid==1)write(*,*)'Sink particles are only implemented for 3d sims.'

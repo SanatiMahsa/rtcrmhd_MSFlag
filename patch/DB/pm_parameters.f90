@@ -47,9 +47,12 @@ module pm_parameters
   real(dp)::AGN_fbk_frac_mom=0               ! Fraction of AGN feedback released as momentum injection
   real(dp)::AGN_fbk_frac_RT=0               ! Fraction of AGN feedback released as radiation injection
   real(dp)::AGN_fbk_frac_mhd=0               ! Fraction of AGN feedback released as magnetic injection
+#ifdef MS
+  real(dp)::AGN_fbk_frac_ener_nml, AGN_fbk_frac_RT_nml  ! preserved namelist values for mode switching
+#endif
 
   !character(LEN=15)::feedback_scheme='energy' ! AGN feedback scheme; options: 'energy' or 'momentum'
-  real(dp)::T2_min=1.d7                      ! Minimum temperature of the gas to trigger AGN blast; in K
+  real(dp)::T2_min=1.d9                      ! Minimum temperature of the gas to trigger AGN blast; in K
   real(dp)::T2_max=1.d9                      ! Maximum allowed temperature of the AGN blast; in K
   real(dp)::T2_AGN=1.d12                     ! AGN blast temperature; in K
 
