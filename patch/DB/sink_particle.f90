@@ -3503,7 +3503,7 @@ subroutine count_clouds_np(ind_grid,ind_part,ind_grid_part,ng,np,action,ilevel)
   ! compute volume of smallest cell
   nx_loc=(icoarse_max-icoarse_min+1)
   scale=boxlen/dble(nx_loc)
-  dx_min=(0.5D0**nlevelmax)*scale
+  dx_min=(0.5D0**nlevelmax)*scale/aexp
   vol_min=dx_min**ndim
 
   do idim=1,ndim
