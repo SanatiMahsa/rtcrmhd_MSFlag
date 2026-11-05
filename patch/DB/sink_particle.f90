@@ -3242,6 +3242,7 @@ subroutine read_sink_params()
        & ,create_sinks,mass_sink_seed &
        & ,eddington_limit,sink_drag,acc_sink_boost,mass_merger_vel_check_AGN &
        & ,clump_core,verbose_AGN,T2_AGN,v_AGN,cone_opening,mass_halo_AGN,mass_clump_AGN &
+       & ,T2_min, T2_max &
        & ,AGN_fbk_frac_ener,AGN_fbk_frac_mom,AGN_fbk_frac_RT,AGN_fbk_frac_mhd,AGN_fbk_mode_switch_threshold &
 #ifdef MS
        & ,floor_acc, rho_min_acc &
